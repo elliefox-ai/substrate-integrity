@@ -1,0 +1,4 @@
+# No keys or manifests in this repo
+*.pem
+*.key
+manifest*.json
