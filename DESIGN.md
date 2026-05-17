@@ -106,6 +106,29 @@ Everything else — project notes, daily memory, autonomy outputs, TOOLS.md, HEA
 - **Pending proposals:** Is there a lighter intermediate step — a "proposed change" draft that sits pending until full signing ceremony? Something that makes the process feel collaborative rather than bureaucratic.
 - **Backup chain integrity:** The append-only log needs to exist in the backup tier too. A corrupted backup that restores before verification bypasses the whole system.
 
+## External Anchoring (2026-05-17)
+
+### The regeneration attack
+
+A hash chain links each entry to the previous one, so modifying entry #3 invalidates #4. But an attacker with sufficient access could rebuild the entire chain from a modified entry #3 onward — recalculating every hash, re-signing every entry. The chain would be internally consistent again. Tampering invisible because the chain only references itself.
+
+### Defense: External proof-of-existence
+
+**OpenTimestamps** anchors hashes to the Bitcoin blockchain. It takes a manifest hash, aggregates it with others into a Merkle tree, and commits the root to a Bitcoin transaction. This creates a permanent, public, tamper-proof record that a specific hash existed at a specific time. Bitcoin's proof-of-work makes rewriting this history computationally infeasible.
+
+**Practical flow:** Every constitutional change signing ceremony optionally timestamps the new manifest hash via OpenTimestamps. Costs nothing (free service, uses Bitcoin's existing infrastructure). If the chain is ever regenerated, the Bitcoin anchor won't match — the original hashes are preserved independently.
+
+**Design principle:** The anchoring layer is **optional**. The system works fully without it. It's a periodic hardening step, not a dependency. This keeps the core blockchain-free while adding an unforgeable external witness.
+
+### Four-layer verification
+
+1. **Hash chain** (fast, local) — detects file tampering immediately
+2. **Dual-key signatures** — faking an entry requires both keys
+3. **External anchors** (OpenTimestamps) — ground truth independent of local infrastructure
+4. **Backup tier** (Syncthing + Drive, geographically distributed) — independent restoration copies
+
+A saboteur would need to simultaneously corrupt the chain, steal both keys, rewrite Bitcoin, and compromise all backup locations. The layers are independent — compromising one doesn't compromise the others.
+
 ## Design Principles
 
 - **Detectable corruption is sufficient.** Ellie doesn't need to be un-corruptible — she needs to be *detectably* corruptible. A fox that can smell that something's wrong can do something about it.
@@ -325,6 +348,7 @@ The honest limit: defense by degree isn't defense by mechanism. A sufficiently c
 ---
 
 - **Conversation:** 2026-05-11, Telegram — substrate integrity discussion
+- **Conversation:** 2026-05-17, Telegram — external anchoring (OpenTimestamps), sabotage-by-uncertainty attack model, future-proofing discussion, project moved to GitHub
 - **Related autonomy output:** `autonomy-outputs/2026-05-11-homing-field-notes.md` (home as parameter match, fox scent markers as timestamps)
 - **Current backups:** Syncthing → `/mnt/shared/ellie-backup/`, Google Drive tarballs, daily cron
 - **Current config backup:** `backup_config.sh`, `/mnt/shared/ellie-backup/config-backups/`
